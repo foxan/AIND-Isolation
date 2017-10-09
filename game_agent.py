@@ -34,8 +34,11 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+        return float("-inf")
+    if game.is_winner(player):
+        return float("inf")
+    return float(len(game.get_legal_moves(player)))
 
 
 def custom_score_2(game, player):
@@ -60,8 +63,11 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+        return float("-inf")
+    if game.is_winner(player):
+        return float("inf")
+    return float(len(game.get_legal_moves(player)))
 
 
 def custom_score_3(game, player):
@@ -86,8 +92,11 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+        return float("-inf")
+    if game.is_winner(player):
+        return float("inf")
+    return float(len(game.get_legal_moves(player)))
 
 
 class IsolationPlayer:
@@ -212,9 +221,47 @@ class MinimaxPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        def terminal_test(game):
+            """ Return True if the game is over for the active player
+            and False otherwise.
+            """
+            return not bool(game.get_legal_moves())
 
+        def min_value(game, depth):
+            """ Return the value for a win if the game is over,
+            otherwise return the minimum value over all legal child
+            nodes.
+            """
+            if self.time_left() < self.TIMER_THRESHOLD:
+                raise SearchTimeout()
+            if terminal_test(game):
+                return game.utility(self)
+            if depth == 0:
+                return self.score(game, self)
+
+            v = float("inf")
+            for m in game.get_legal_moves():
+                v = min(v, max_value(game.forecast_move(m), depth-1))
+            return v
+
+        def max_value(game, depth):
+            """ Return the value for a loss if the game is over,
+            otherwise return the maximum value over all legal child
+            nodes.
+            """
+            if self.time_left() < self.TIMER_THRESHOLD:
+                raise SearchTimeout()
+            if terminal_test(game):
+                return game.utility(self)
+            if depth == 0:
+                return self.score(game, self)
+
+            v = float("-inf")
+            for m in game.get_legal_moves():
+                v = max(v, min_value(game.forecast_move(m), depth-1))
+            return v
+
+        return max(game.get_legal_moves(), key=lambda m: min_value(game.forecast_move(m), depth-1))
 
 class AlphaBetaPlayer(IsolationPlayer):
     """Game-playing agent that chooses a move using iterative deepening minimax
