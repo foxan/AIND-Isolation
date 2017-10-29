@@ -218,14 +218,6 @@ class MinimaxPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
-
-        def terminal_test(game):
-            """ Return True if the game is over for the active player
-            and False otherwise.
-            """
-            return not bool(game.get_legal_moves())
 
         def min_value(game, depth):
             """ Return the value for a win if the game is over,
@@ -234,14 +226,13 @@ class MinimaxPlayer(IsolationPlayer):
             """
             if self.time_left() < self.TIMER_THRESHOLD:
                 raise SearchTimeout()
-            if terminal_test(game):
-                return game.utility(self)
-            if depth == 0:
+
+            if depth == self.search_depth:
                 return self.score(game, self)
 
             v = float("inf")
             for m in game.get_legal_moves():
-                v = min(v, max_value(game.forecast_move(m), depth-1))
+                v = min(v, max_value(game.forecast_move(m), depth+1))
             return v
 
         def max_value(game, depth):
@@ -251,17 +242,16 @@ class MinimaxPlayer(IsolationPlayer):
             """
             if self.time_left() < self.TIMER_THRESHOLD:
                 raise SearchTimeout()
-            if terminal_test(game):
-                return game.utility(self)
-            if depth == 0:
+
+            if depth == self.search_depth:
                 return self.score(game, self)
 
             v = float("-inf")
             for m in game.get_legal_moves():
-                v = max(v, min_value(game.forecast_move(m), depth-1))
+                v = max(v, min_value(game.forecast_move(m), depth+1))
             return v
 
-        return max(game.get_legal_moves(), key=lambda m: min_value(game.forecast_move(m), depth-1))
+        return max(game.get_legal_moves(), key=lambda m: min_value(game.forecast_move(m), 1))
 
 class AlphaBetaPlayer(IsolationPlayer):
     """Game-playing agent that chooses a move using iterative deepening minimax
