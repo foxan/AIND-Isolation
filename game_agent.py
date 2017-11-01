@@ -38,7 +38,14 @@ def custom_score(game, player):
         return float("-inf")
     if game.is_winner(player):
         return float("inf")
-    return float(len(game.get_legal_moves(player)))
+
+    own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+    
+    own_pos = game.get_player_location(player)
+    own_dist = ((game.width - own_pos[0]) ** 2 + (game.height - own_pos[1]) ** 2) ** 0.5
+
+    return own_moves - (opp_moves + own_dist) * 0.5
 
 
 def custom_score_2(game, player):
@@ -67,8 +74,11 @@ def custom_score_2(game, player):
         return float("-inf")
     if game.is_winner(player):
         return float("inf")
-    return float(len(game.get_legal_moves(player)))
 
+    own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+
+    return own_moves - opp_moves
 
 def custom_score_3(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -96,8 +106,10 @@ def custom_score_3(game, player):
         return float("-inf")
     if game.is_winner(player):
         return float("inf")
-    return float(len(game.get_legal_moves(player)))
 
+    own_moves = len(game.get_legal_moves(player))
+
+    return own_moves
 
 class IsolationPlayer:
     """Base class for minimax and alphabeta agents -- this class is never
@@ -171,10 +183,10 @@ class MinimaxPlayer(IsolationPlayer):
         try:
             # The try/except block will automatically catch the exception
             # raised when the timer is about to expire.
-            return self.minimax(game, self.search_depth)
+            best_move = self.minimax(game, self.search_depth)
 
         except SearchTimeout:
-            pass  # Handle any actions required after timeout as needed
+            return best_move  # Handle any actions required after timeout as needed
 
         # Return the best move from the last completed search iteration
         return best_move
