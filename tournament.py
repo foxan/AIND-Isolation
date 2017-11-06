@@ -26,7 +26,7 @@ from game_agent import (MinimaxPlayer, AlphaBetaPlayer, custom_score,
                         custom_score_2, custom_score_3)
 
 NUM_PROCS = 4
-NUM_MATCHES = 5  # number of matches against each opponent
+NUM_MATCHES = 50  # number of matches against each opponent
 TIME_LIMIT = 150  # number of milliseconds before timeout
 
 DESCRIPTION = """
@@ -102,18 +102,12 @@ def play_matches(cpu_agents, test_agents, num_matches):
     total_forfeits = 0.
     total_matches = 2 * num_matches * len(cpu_agents)
 
-    print("\n{:^9}{:^13}{:^13}{:^13}{:^13}{:^13}".format(
-        "Match #", "Opponent", test_agents[0].name, test_agents[1].name,
-        test_agents[2].name, test_agents[3].name))
-    print("{:^9}{:^13} {:^5}| {:^5} {:^5}| {:^5} {:^5}| {:^5} {:^5}| {:^5}"
-          .format("", "", *(["Won", "Lost"] * 4)))
+    print("\n{:^9}{:^13}".format("Match #", "Opponent") + ''.join(['{:^13}'.format(x[1].name) for x in enumerate(test_agents)]))
+    print("{:^9}{:^13} ".format("", "") +  ' '.join(['{:^5}| {:^5}'.format("Won", "Lost") for x in enumerate(test_agents)]))
 
     for idx, agent in enumerate(cpu_agents):
-        wins = {test_agents[0].player: 0,
-                test_agents[1].player: 0,
-                test_agents[2].player: 0,
-                test_agents[3].player: 0,
-                agent.player: 0}
+        wins = {key: 0 for (key, value) in test_agents}
+        wins[agent.player] = 0
 
         print("{!s:^9}{:^13}".format(idx + 1, agent.name), end="", flush=True)
 
@@ -124,15 +118,19 @@ def play_matches(cpu_agents, test_agents, num_matches):
         _total = 2 * num_matches
         round_totals = sum([[wins[agent.player], _total - wins[agent.player]]
                             for agent in test_agents], [])
-        print(" {:^5}| {:^5} {:^5}| {:^5} {:^5}| {:^5} {:^5}| {:^5}"
-              .format(*round_totals))
+        print(' ' + ' '.join([
+            '{:^5}| {:^5}'.format(
+                round_totals[i],round_totals[i+1]
+            ) for i in range(0, len(round_totals), 2)
+        ]))
 
     print("-" * 74)
-    print("{:^9}{:^13}{:^13}{:^13}{:^13}{:^13}\n".format(
-        "", "Win Rate:",
-        *["{:.1f}%".format(100 * total_wins[a.player] / total_matches)
-          for a in test_agents]
-    ))
+    print('{:^9}{:^13}'.format("", "Win Rate:") +
+        ''.join([
+            '{:^13}'.format(
+                "{:.1f}%".format(100 * total_wins[x[1].player] / total_matches)
+            ) for x in enumerate(test_agents)
+    ]))
 
     if total_timeouts:
         print(("\nThere were {} timeouts during the tournament -- make sure " +

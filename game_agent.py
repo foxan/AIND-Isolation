@@ -41,11 +41,14 @@ def custom_score(game, player):
 
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
-    
+   
     own_pos = game.get_player_location(player)
     own_dist = ((game.width - own_pos[0]) ** 2 + (game.height - own_pos[1]) ** 2) ** 0.5
 
-    return own_moves - (opp_moves + own_dist) * 0.5
+    if game.move_count < 10:
+        return float(own_moves - opp_moves - own_dist)
+    else:
+        return float(own_moves - opp_moves)
 
 
 def custom_score_2(game, player):
@@ -78,7 +81,7 @@ def custom_score_2(game, player):
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
 
-    return own_moves - opp_moves
+    return float(own_moves - opp_moves)
 
 def custom_score_3(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -109,7 +112,7 @@ def custom_score_3(game, player):
 
     own_moves = len(game.get_legal_moves(player))
 
-    return own_moves
+    return float(own_moves)
 
 class IsolationPlayer:
     """Base class for minimax and alphabeta agents -- this class is never
@@ -178,7 +181,10 @@ class MinimaxPlayer(IsolationPlayer):
 
         # Initialize the best move so that this function returns something
         # in case the search fails due to timeout
-        best_move = (-1, -1)
+        try:
+            best_move = game.get_legal_moves()[0]
+        except:
+            return (-1, -1)
 
         try:
             # The try/except block will automatically catch the exception
@@ -270,7 +276,10 @@ class MinimaxPlayer(IsolationPlayer):
                 v = max(v, min_value(game.forecast_move(m), depth-1))
             return v
 
-        best_move = (-1, -1)
+        try:
+            best_move = game.get_legal_moves()[0]
+        except:
+            return (-1, -1)
         alpha = float("-inf")
         for m in game.get_legal_moves():
             v = min_value(game.forecast_move(m), depth)
@@ -319,7 +328,10 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         # Initialize the best move so that this function returns something
         # in case the search fails due to timeout
-        best_move = (-1, -1)
+        try:
+            best_move = game.get_legal_moves()[0]
+        except:
+            return (-1, -1)
 
         try:
             depth = 1
@@ -427,7 +439,11 @@ class AlphaBetaPlayer(IsolationPlayer):
                 alpha = max(alpha, v)
             return v
 
-        best_move = (-1, -1)
+        try:
+            best_move = game.get_legal_moves()[0]
+        except:
+            return (-1, -1)
+
         for m in game.get_legal_moves():
             v = min_value(game.forecast_move(m), depth, alpha, beta)
             if v > alpha:
