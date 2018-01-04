@@ -41,12 +41,17 @@ def custom_score(game, player):
 
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
-   
-    own_pos = game.get_player_location(player)
-    own_dist = ((game.width - own_pos[0]) ** 2 + (game.height - own_pos[1]) ** 2) ** 0.5
 
-    if game.move_count < 10:
-        return float(own_moves - opp_moves - own_dist)
+    own_pos = game.get_player_location(player)
+    own_dist = ((game.width / 2 - own_pos[0]) ** 2 + (game.height / 2 - own_pos[1]) ** 2) ** 0.5 # calculate player distance from center
+
+    blank_spaces = len(game.get_blank_spaces())
+    game_stage = (game.width * game.height - blank_spaces) / (game.width * game.height * 0.59) # average game length for a 7*7 board is around 29 steps, i.e. 59%
+
+    if game_stage <= 0.2: # In early stage, try to move as close as to center of the board
+        return float(-own_dist)
+    elif game_stage <= 0.5:
+        return float(own_moves - opp_moves - own_dist * 0.1)
     else:
         return float(own_moves - opp_moves)
 
@@ -81,7 +86,17 @@ def custom_score_2(game, player):
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
 
-    return float(own_moves - opp_moves)
+    own_pos = game.get_player_location(player)
+    own_dist = ((game.width / 2 - own_pos[0]) ** 2 + (game.height / 2 - own_pos[1]) ** 2) ** 0.5
+
+    blank_spaces = len(game.get_blank_spaces())
+    game_stage = (game.width * game.height - blank_spaces) / (game.width * game.height * 0.59)
+
+    if game_stage <= 0.2:
+        return float(-own_dist)
+    else:
+        return float(own_moves - opp_moves - own_dist * 0.1)
+
 
 def custom_score_3(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -111,8 +126,18 @@ def custom_score_3(game, player):
         return float("inf")
 
     own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
 
-    return float(own_moves)
+    own_pos = game.get_player_location(player)
+    own_dist = ((game.width / 2 - own_pos[0]) ** 2 + (game.height / 2 - own_pos[1]) ** 2) ** 0.5
+
+    blank_spaces = len(game.get_blank_spaces())
+    game_stage = (game.width * game.height - blank_spaces) / (game.width * game.height * 0.59)
+
+    if game_stage <= 0.2:
+        return float(-own_dist)
+    else:
+        return float(own_moves - opp_moves)
 
 class IsolationPlayer:
     """Base class for minimax and alphabeta agents -- this class is never
