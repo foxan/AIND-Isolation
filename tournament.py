@@ -45,8 +45,8 @@ def _run(*args):
     game = Board(p1, p2)
     for m in moves:
         game.apply_move(m)
-    winner, _, termination = game.play(time_limit=TIME_LIMIT)
-    return (idx, winner == p1), termination
+    winner, move_history, termination = game.play(time_limit=TIME_LIMIT)
+    return (idx, winner == p1, len(move_history)), termination
 
 
 def play_round(cpu_agent, test_agents, win_counts, num_matches):
@@ -58,6 +58,7 @@ def play_round(cpu_agent, test_agents, win_counts, num_matches):
     """
     timeout_count = 0
     forfeit_count = 0
+    move_count = 0
     pool = Pool(NUM_PROCS)
 
     for _ in range(num_matches):
@@ -78,6 +79,7 @@ def play_round(cpu_agent, test_agents, win_counts, num_matches):
         for result, termination in pool.imap_unordered(_run, games):
             game = games[result[0]]
             winner = game[1] if result[1] else game[2]
+            move_count += result[2]
 
             win_counts[winner] += 1
 
@@ -86,7 +88,7 @@ def play_round(cpu_agent, test_agents, win_counts, num_matches):
             elif winner not in test_agents and termination == "forfeit":
                 forfeit_count += 1
 
-    return timeout_count, forfeit_count
+    return timeout_count, forfeit_count, move_count
 
 
 def update(total_wins, wins):
@@ -103,7 +105,7 @@ def play_matches(cpu_agents, test_agents, num_matches):
     total_matches = 2 * num_matches * len(cpu_agents)
 
     print("\n{:^9}{:^13}".format("Match #", "Opponent") + ''.join(['{:^13}'.format(x[1].name) for x in enumerate(test_agents)]))
-    print("{:^9}{:^13} ".format("", "") +  ' '.join(['{:^5}| {:^5}'.format("Won", "Lost") for x in enumerate(test_agents)]))
+    print("{:^9}{:^13} ".format("", "") +  ' '.join(['{:^5}| {:^5}'.format("Won", "Lost") for x in enumerate(test_agents)]) + " Avg Moves")
 
     for idx, agent in enumerate(cpu_agents):
         wins = {key: 0 for (key, value) in test_agents}
@@ -114,6 +116,7 @@ def play_matches(cpu_agents, test_agents, num_matches):
         counts = play_round(agent, test_agents, wins, num_matches)
         total_timeouts += counts[0]
         total_forfeits += counts[1]
+        total_moves = counts[2]
         total_wins = update(total_wins, wins)
         _total = 2 * num_matches
         round_totals = sum([[wins[agent.player], _total - wins[agent.player]]
@@ -122,7 +125,7 @@ def play_matches(cpu_agents, test_agents, num_matches):
             '{:^5}| {:^5}'.format(
                 round_totals[i],round_totals[i+1]
             ) for i in range(0, len(round_totals), 2)
-        ]))
+        ]) + ' {:^9}'.format(str(round(total_moves / (num_matches * len(test_agents) * 2)))))
 
     print("-" * 74)
     print('{:^9}{:^13}'.format("", "Win Rate:") +
